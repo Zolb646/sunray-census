@@ -1,0 +1,103 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Admin {
+  id        Int      @id @default(autoincrement())
+  userId    String   @unique
+  email     String
+  createdAt DateTime @default(now())
+}
+
+model ClothingItem {
+  id                Int             @id @default(autoincrement())
+  name              String
+  category          String
+  sizes             String[]
+  costPrice         Int
+  sellingPrice      Int
+  stockQty          Int             @default(0)
+  lowStockThreshold Int             @default(5)
+  imageUrl          String?
+  description       String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+  stockMovements    StockMovement[]
+  saleItems         SaleItem[]
+}
+
+enum StockReason {
+  RESTOCK
+  SALE
+  DAMAGE
+  LOSS
+  ADJUSTMENT
+  REFUND
+}
+
+model StockMovement {
+  id        Int          @id @default(autoincrement())
+  clotheId  Int
+  changeQty Int
+  reason    StockReason
+  note      String?
+  createdAt DateTime     @default(now())
+  item      ClothingItem @relation(fields: [clotheId], references: [id], onDelete: Cascade)
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  TRANSFER
+  OTHER
+}
+
+enum SaleStatus {
+  COMPLETED
+  CANCELED
+  REFUNDED
+}
+
+model Sale {
+  id            Int           @id @default(autoincrement())
+  status        SaleStatus    @default(COMPLETED)
+  total         Int
+  paymentMethod PaymentMethod @default(CASH)
+  note          String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  items         SaleItem[]
+}
+
+model SaleItem {
+  id        Int          @id @default(autoincrement())
+  saleId    Int
+  clotheId  Int
+  qty       Int
+  unitPrice Int
+  total     Int
+  sale      Sale         @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  item      ClothingItem @relation(fields: [clotheId], references: [id])
+}
+
+enum ExpenseCategory {
+  RENT
+  UTILITIES
+  SUPPLIES
+  MARKETING
+  SALARY
+  OTHER
+}
+
+model Expense {
+  id          Int             @id @default(autoincrement())
+  amount      Int
+  category    ExpenseCategory
+  description String
+  date        DateTime        @default(now())
+  createdAt   DateTime        @default(now())
+}
