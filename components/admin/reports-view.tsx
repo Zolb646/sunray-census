@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Papa from 'papaparse'
 import { type DateRange } from 'react-day-picker'
 import { getReportData } from '@/app/admin/reports/actions'
@@ -8,7 +8,7 @@ import {
   getExpenseCategoryLabel,
   getInventoryCategoryLabel,
 } from '@/lib/localization'
-import { formatCents, formatDate } from '@/lib/utils'
+import { endOfDay, formatCents, formatDate, startOfMonth } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -29,46 +29,43 @@ function downloadCsv(filename: string, data: object[]) {
 }
 
 export function ReportsView() {
-  const now = new Date()
-  const initialRange: DateRange = {
-    from: new Date(now.getFullYear(), now.getMonth(), 1),
-    to: now,
-  }
-
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(
-    initialRange
-  )
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
+    const now = new Date()
+    return {
+      from: startOfMonth(now),
+      to: now,
+    }
+  })
   const [data, setData] = useState<ReportData | null>(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+
+  async function loadReport(fromDate: Date, toDate: Date) {
+    setLoading(true)
+    setError('')
+
+    try {
+      const result = await getReportData(fromDate, endOfDay(toDate))
+      setData(result)
+    } catch (caughtError) {
+      setError('Тайлангийн мэдээлэл ачаалж чадсангүй')
+      console.error(caughtError)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  useEffect(() => {
+    const now = new Date()
+    void loadReport(startOfMonth(now), now)
+  }, [])
 
   async function handleLoad() {
     const fromDate = dateRange?.from
     const toDate = dateRange?.to ?? dateRange?.from
 
     if (!fromDate || !toDate) return
-
-    setLoading(true)
-    setError('')
-    try {
-      const result = await getReportData(
-        fromDate,
-        new Date(
-          toDate.getFullYear(),
-          toDate.getMonth(),
-          toDate.getDate(),
-          23,
-          59,
-          59
-        )
-      )
-      setData(result)
-    } catch (e) {
-      setError('Тайлангийн мэдээлэл ачаалж чадсангүй')
-      console.error(e)
-    } finally {
-      setLoading(false)
-    }
+    await loadReport(fromDate, toDate)
   }
 
   function exportSalesCsv() {
@@ -115,161 +112,247 @@ export function ReportsView() {
     )
   }
 
+  const selectedFrom = dateRange?.from
+  const selectedTo = dateRange?.to ?? dateRange?.from
+  const rangeLabel = selectedFrom && selectedTo
+    ? `${formatDate(selectedFrom)} - ${formatDate(selectedTo)}`
+    : 'Current month'
+
+  const expenseByCategory = data
+    ? Object.entries(
+        data.expenseDetails.reduce<Record<string, number>>((accumulator, expense) => {
+          accumulator[expense.category] =
+            (accumulator[expense.category] ?? 0) + expense.amount
+          return accumulator
+        }, {})
+      ).sort(([, left], [, right]) => right - left)
+    : []
+
   return (
-    <div className="space-y-6">
-      <div className="flex flex-wrap items-end gap-3">
-        <DateRangePicker value={dateRange} onChange={setDateRange} />
-        <Button onClick={handleLoad} disabled={loading}>
-          {loading ? 'Ачаалж байна...' : 'Тайлан гаргах'}
-        </Button>
-      </div>
-
-      {error && <p className="text-sm text-destructive">{error}</p>}
-
-      {loading && (
-        <div className="grid grid-cols-3 gap-4">
-          {[...Array(3)].map((_, index) => (
-            <Skeleton key={index} className="h-24 rounded-lg" />
-          ))}
-        </div>
-      )}
-
-      {data && (
-        <div className="space-y-6">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-muted-foreground">
-                  Нийт орлого
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-green-600">
-                  {formatCents(data.totalRevenue)}
-                </div>
-                <div className="text-xs text-muted-foreground">
-                  {data.salesCount} дууссан борлуулалт
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-muted-foreground">
-                  Нийт зардал
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold text-red-500">
-                  {formatCents(data.totalExpenses)}
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm text-muted-foreground">
-                  Цэвэр ашиг
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div
-                  className={`text-2xl font-bold ${data.netProfit >= 0 ? 'text-green-600' : 'text-red-500'}`}
-                >
-                  {formatCents(data.netProfit)}
-                </div>
-              </CardContent>
-            </Card>
+    <div className='space-y-6'>
+      <section className='panel-surface rounded-[30px] p-5 sm:p-6'>
+        <div className='flex flex-col gap-5 xl:flex-row xl:items-end xl:justify-between'>
+          <div>
+            <div className='text-[11px] uppercase tracking-[0.28em] text-muted-foreground'>
+              Reporting suite
+            </div>
+            <h2 className='mt-2 text-3xl font-semibold tracking-tight'>
+              Generate clean performance snapshots and exports.
+            </h2>
+            <p className='mt-2 max-w-2xl text-sm leading-6 text-muted-foreground'>
+              Use a custom date range, review the core numbers, and export sales, expenses, or inventory summaries in one pass.
+            </p>
           </div>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Шилдэг 5 бараа</CardTitle>
-                <Button size="sm" variant="outline" onClick={exportSalesCsv}>
+          <div className='flex flex-wrap items-center gap-3'>
+            <DateRangePicker value={dateRange} onChange={setDateRange} />
+            <Button className='rounded-full' onClick={handleLoad} disabled={loading || !dateRange?.from}>
+              {loading ? 'Ачаалж байна...' : 'Тайлан гаргах'}
+            </Button>
+          </div>
+        </div>
+      </section>
+
+      {error ? <p className='text-sm text-destructive'>{error}</p> : null}
+
+      {loading ? (
+        <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4'>
+          {[...Array(4)].map((_, index) => (
+            <Skeleton key={index} className='h-32 rounded-[28px]' />
+          ))}
+        </div>
+      ) : null}
+
+      {data ? (
+        <div className='space-y-6'>
+          <div className='grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4'>
+            <div className='metric-tile rounded-[28px] p-5'>
+              <div className='text-sm text-muted-foreground'>Range</div>
+              <div className='mt-2 text-lg font-semibold'>{rangeLabel}</div>
+            </div>
+            <div className='metric-tile rounded-[28px] p-5'>
+              <div className='text-sm text-muted-foreground'>Total revenue</div>
+              <div className='mt-2 text-3xl font-semibold text-green-700'>
+                {formatCents(data.totalRevenue)}
+              </div>
+            </div>
+            <div className='metric-tile rounded-[28px] p-5'>
+              <div className='text-sm text-muted-foreground'>Total expenses</div>
+              <div className='mt-2 text-3xl font-semibold text-rose-600'>
+                {formatCents(data.totalExpenses)}
+              </div>
+            </div>
+            <div className='metric-tile rounded-[28px] p-5'>
+              <div className='text-sm text-muted-foreground'>Net profit</div>
+              <div
+                className={`mt-2 text-3xl font-semibold ${
+                  data.netProfit >= 0 ? 'text-green-700' : 'text-rose-600'
+                }`}
+              >
+                {formatCents(data.netProfit)}
+              </div>
+            </div>
+          </div>
+
+          <div className='grid gap-4 xl:grid-cols-[1.4fr_1fr]'>
+            <Card className='panel-surface gap-0 border-white/70 py-0'>
+              <CardHeader className='flex flex-col gap-3 border-b border-border/70 pb-4 pt-5 sm:flex-row sm:items-center sm:justify-between'>
+                <div>
+                  <CardTitle className='text-xl font-semibold tracking-tight'>
+                    Шилдэг 5 бараа
+                  </CardTitle>
+                  <p className='mt-1 text-sm text-muted-foreground'>
+                    {data.salesCount} completed sales included in this report.
+                  </p>
+                </div>
+                <Button size='sm' variant='outline' className='rounded-full' onClick={exportSalesCsv}>
                   CSV татах
                 </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {data.topItems.length === 0 ? (
-                <p className="text-sm text-muted-foreground">
-                  Энэ хугацаанд борлуулалт алга
-                </p>
-              ) : (
-                <div className="space-y-2">
-                  {data.topItems.map((item, index) => (
+              </CardHeader>
+              <CardContent className='space-y-3 pb-6 pt-5'>
+                {data.topItems.length === 0 ? (
+                  <div className='rounded-[24px] border border-dashed border-border p-6 text-sm text-muted-foreground'>
+                    Энэ хугацаанд борлуулалт алга
+                  </div>
+                ) : (
+                  data.topItems.map((item, index) => (
                     <div
                       key={`${item.name}-${index}`}
-                      className="flex items-center justify-between py-1"
+                      className='metric-tile flex items-center justify-between rounded-[24px] p-4'
                     >
-                      <div className="flex items-center gap-2">
-                        <span className="w-5 text-sm text-muted-foreground">
+                      <div className='flex items-center gap-3'>
+                        <div className='flex h-10 w-10 items-center justify-center rounded-2xl bg-primary/10 text-primary'>
                           #{index + 1}
-                        </span>
-                        <span className="text-sm font-medium">{item.name}</span>
-                        <Badge variant="secondary" className="text-xs">
-                          {getInventoryCategoryLabel(item.category)}
-                        </Badge>
-                      </div>
-                      <div className="text-right">
-                        <div className="text-sm font-medium">
-                          {item.qty} ширхэг
                         </div>
-                        <div className="text-xs text-muted-foreground">
+                        <div>
+                          <div className='font-medium'>{item.name}</div>
+                          <div className='mt-1'>
+                            <Badge variant='secondary'>
+                              {getInventoryCategoryLabel(item.category)}
+                            </Badge>
+                          </div>
+                        </div>
+                      </div>
+                      <div className='text-right'>
+                        <div className='font-medium'>{item.qty} ширхэг</div>
+                        <div className='text-sm text-muted-foreground'>
                           {formatCents(item.revenue)}
                         </div>
                       </div>
                     </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+                  ))
+                )}
+              </CardContent>
+            </Card>
 
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle>Нөөцийн төлөв</CardTitle>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  onClick={exportInventoryCsv}
-                >
+            <Card className='panel-surface gap-0 border-white/70 py-0'>
+              <CardHeader className='border-b border-border/70 pb-4 pt-5'>
+                <CardTitle className='text-xl font-semibold tracking-tight'>
+                  Export center
+                </CardTitle>
+                <p className='text-sm text-muted-foreground'>
+                  Download ready-to-share CSV files for finance and stock review.
+                </p>
+              </CardHeader>
+              <CardContent className='grid gap-3 pb-6 pt-5'>
+                <Button variant='outline' className='justify-between rounded-2xl px-4 py-6' onClick={exportSalesCsv}>
+                  <span>Sales summary CSV</span>
+                  <span className='text-xs text-muted-foreground'>Top items</span>
+                </Button>
+                <Button variant='outline' className='justify-between rounded-2xl px-4 py-6' onClick={exportExpensesCsv}>
+                  <span>Expense CSV</span>
+                  <span className='text-xs text-muted-foreground'>Ledger lines</span>
+                </Button>
+                <Button variant='outline' className='justify-between rounded-2xl px-4 py-6' onClick={exportInventoryCsv}>
+                  <span>Inventory CSV</span>
+                  <span className='text-xs text-muted-foreground'>Stock values</span>
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+
+          <div className='grid gap-4 xl:grid-cols-[1.2fr_0.8fr]'>
+            <Card className='panel-surface gap-0 border-white/70 py-0'>
+              <CardHeader className='flex flex-col gap-3 border-b border-border/70 pb-4 pt-5 sm:flex-row sm:items-center sm:justify-between'>
+                <div>
+                  <CardTitle className='text-xl font-semibold tracking-tight'>
+                    Нөөцийн төлөв
+                  </CardTitle>
+                  <p className='mt-1 text-sm text-muted-foreground'>
+                    Current stock value and low-stock flags across the catalog.
+                  </p>
+                </div>
+                <Button size='sm' variant='outline' className='rounded-full' onClick={exportInventoryCsv}>
                   CSV татах
                 </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <div className="max-h-64 space-y-1 overflow-y-auto">
-                {data.inventoryItems.map((item, index) => (
-                  <div
-                    key={`${item.name}-${index}`}
-                    className="flex items-center justify-between border-b py-1 text-sm last:border-0"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span>{item.name}</span>
-                      {item.isLowStock && (
-                        <Badge variant="destructive" className="text-xs">
-                          Бага
-                        </Badge>
-                      )}
+              </CardHeader>
+              <CardContent className='space-y-3 pb-6 pt-5'>
+                <div className='max-h-[420px] space-y-3 overflow-y-auto pr-1'>
+                  {data.inventoryItems.map((item, index) => (
+                    <div
+                      key={`${item.name}-${index}`}
+                      className='metric-tile rounded-[24px] p-4'
+                    >
+                      <div className='flex items-center justify-between gap-4'>
+                        <div>
+                          <div className='font-medium'>{item.name}</div>
+                          <div className='mt-1 text-sm text-muted-foreground'>
+                            {getInventoryCategoryLabel(item.category)}
+                          </div>
+                        </div>
+                        {item.isLowStock ? (
+                          <Badge variant='destructive'>Бага</Badge>
+                        ) : (
+                          <Badge variant='secondary'>OK</Badge>
+                        )}
+                      </div>
+                      <div className='mt-3 flex flex-wrap gap-4 text-sm text-muted-foreground'>
+                        <span>Тоо: {item.stockQty}</span>
+                        <span>Өртөг: {formatCents(item.costValue)}</span>
+                        <span>Зарах үнэ: {formatCents(item.sellValue)}</span>
+                      </div>
                     </div>
-                    <div className="flex gap-4 text-muted-foreground">
-                      <span>Тоо: {item.stockQty}</span>
-                      <span>Өртөг: {formatCents(item.costValue)}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </CardContent>
-          </Card>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
 
-          <div className="flex justify-end">
-            <Button size="sm" variant="outline" onClick={exportExpensesCsv}>
-              Зардлын CSV татах
-            </Button>
+            <Card className='panel-surface gap-0 border-white/70 py-0'>
+              <CardHeader className='border-b border-border/70 pb-4 pt-5'>
+                <CardTitle className='text-xl font-semibold tracking-tight'>
+                  Expense mix
+                </CardTitle>
+                <p className='text-sm text-muted-foreground'>
+                  Ranked by total amount in the selected range.
+                </p>
+              </CardHeader>
+              <CardContent className='space-y-3 pb-6 pt-5'>
+                {expenseByCategory.length === 0 ? (
+                  <div className='rounded-[24px] border border-dashed border-border p-6 text-sm text-muted-foreground'>
+                    No expense entries in this range.
+                  </div>
+                ) : (
+                  expenseByCategory.map(([category, amount]) => (
+                    <div key={category} className='metric-tile rounded-[24px] p-4'>
+                      <div className='flex items-center justify-between gap-4'>
+                        <div className='font-medium'>
+                          {getExpenseCategoryLabel(category)}
+                        </div>
+                        <div className='text-right font-semibold'>
+                          {formatCents(amount)}
+                        </div>
+                      </div>
+                    </div>
+                  ))
+                )}
+                <Button size='sm' variant='outline' className='w-full rounded-full' onClick={exportExpensesCsv}>
+                  Зардлын CSV татах
+                </Button>
+              </CardContent>
+            </Card>
           </div>
         </div>
-      )}
+      ) : null}
     </div>
   )
 }

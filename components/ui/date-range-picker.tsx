@@ -1,8 +1,7 @@
 "use client";
 
 import * as React from "react";
-import { format } from "date-fns";
-import { mn } from "date-fns/locale";
+import { addDays, format } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { type DateRange } from "react-day-picker";
 
@@ -27,20 +26,21 @@ export function DateRangePicker({
   value,
   onChange,
   className,
-  placeholder = "Огнооны хүрээ сонгох",
+  placeholder = "Pick a date range",
   numberOfMonths = 2,
 }: DateRangePickerProps) {
-  const [internalDate, setInternalDate] = React.useState<DateRange | undefined>(
-    value,
-  );
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
+    from: new Date(new Date().getFullYear(), 0, 12),
+    to: addDays(new Date(new Date().getFullYear(), 0, 12), 30),
+  });
 
   React.useEffect(() => {
-    setInternalDate(value);
+    setDateRange(value ?? undefined);
   }, [value]);
 
   function handleSelect(range: DateRange | undefined) {
-    setInternalDate(range);
-    onChange?.(range);
+    setDateRange(range);
+    if (onChange) onChange(range);
   }
 
   return (
@@ -49,32 +49,32 @@ export function DateRangePicker({
         <PopoverTrigger asChild>
           <Button
             id="date"
+            type="button"
             variant="outline"
             className={cn(
-              "w-84 justify-start rounded-full text-left font-normal",
-              !internalDate?.from && "text-muted-foreground",
+              "w-[320px] justify-start text-left font-normal",
+              !dateRange?.from && "text-muted-foreground",
             )}>
             <CalendarIcon className="mr-2 h-4 w-4" />
-            {internalDate?.from ? (
-              internalDate.to ? (
+            {dateRange?.from ? (
+              dateRange.to ? (
                 <>
-                  {format(internalDate.from, "d MMMM yyyy", { locale: mn })} -{" "}
-                  {format(internalDate.to, "d MMMM yyyy", { locale: mn })}
+                  {format(dateRange.from, "d MMMM yyyy")} -{" "}
+                  {format(dateRange.to, "d MMMM yyyy")}
                 </>
               ) : (
-                format(internalDate.from, "d MMMM yyyy", { locale: mn })
+                format(dateRange.from, "d MMMM yyyy")
               )
             ) : (
               <span>{placeholder}</span>
             )}
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-auto p-0" align="start">
+        <PopoverContent className="w-auto p-0" align="center">
           <Calendar
-            autoFocus
             mode="range"
-            defaultMonth={internalDate?.from}
-            selected={internalDate}
+            defaultMonth={dateRange?.from}
+            selected={dateRange}
             onSelect={handleSelect}
             numberOfMonths={numberOfMonths}
           />

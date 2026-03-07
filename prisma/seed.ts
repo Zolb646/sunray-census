@@ -1,6 +1,16 @@
+import "dotenv/config";
+import { PrismaNeon } from "@prisma/adapter-neon";
 import { PrismaClient } from "@prisma/client";
 
-const prisma = new PrismaClient();
+const databaseUrl = process.env.DATABASE_URL;
+
+if (!databaseUrl) {
+  throw new Error("DATABASE_URL is not set");
+}
+
+const prisma = new PrismaClient({
+  adapter: new PrismaNeon({ connectionString: databaseUrl }),
+});
 
 async function main() {
   console.log("Seeding database...");
@@ -285,3 +295,4 @@ async function main() {
 main()
   .catch(console.error)
   .finally(() => prisma.$disconnect());
+
