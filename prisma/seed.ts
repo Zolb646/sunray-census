@@ -1,6 +1,6 @@
 import "dotenv/config";
 import { PrismaNeon } from "@prisma/adapter-neon";
-import { PrismaClient } from "@prisma/client";
+import { PaymentMethod, PrismaClient } from "@prisma/client";
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -12,10 +12,22 @@ const prisma = new PrismaClient({
   adapter: new PrismaNeon({ connectionString: databaseUrl }),
 });
 
+type SeedPayment = {
+  method: PaymentMethod;
+  amount: number;
+};
+
+type SeedSale = {
+  daysAgo: number;
+  itemIdx: number;
+  qty: number;
+  payments: SeedPayment[];
+  canceled?: boolean;
+};
+
 async function main() {
   console.log("Seeding database...");
 
-  // Clean up in FK-safe order
   await prisma.stockMovement.deleteMany();
   await prisma.saleItem.deleteMany();
   await prisma.sale.deleteMany();
@@ -23,7 +35,6 @@ async function main() {
   await prisma.clothingItem.deleteMany();
   await prisma.admin.deleteMany();
 
-  // Seed clothing items
   const items = await Promise.all([
     prisma.clothingItem.create({
       data: {
@@ -144,23 +155,38 @@ async function main() {
 
   console.log(`Created ${items.length} clothing items`);
 
-  // Seed sales over last 20 days
   const now = new Date();
-  const salesData = [
-    { daysAgo: 1, itemIdx: 0, qty: 1, payment: "CASH" as const },
-    { daysAgo: 2, itemIdx: 2, qty: 2, payment: "CARD" as const },
-    { daysAgo: 3, itemIdx: 4, qty: 1, payment: "TRANSFER" as const },
-    { daysAgo: 5, itemIdx: 1, qty: 3, payment: "CASH" as const },
-    { daysAgo: 6, itemIdx: 6, qty: 1, payment: "CARD" as const },
-    { daysAgo: 8, itemIdx: 3, qty: 2, payment: "CASH" as const },
-    { daysAgo: 10, itemIdx: 7, qty: 1, payment: "CARD" as const },
-    { daysAgo: 12, itemIdx: 5, qty: 2, payment: "CASH" as const },
-    { daysAgo: 15, itemIdx: 9, qty: 1, payment: "TRANSFER" as const },
+  const salesData: SeedSale[] = [
+    { daysAgo: 1, itemIdx: 0, qty: 1, payments: [{ method: "CASH", amount: 5999 }] },
+    { daysAgo: 2, itemIdx: 2, qty: 2, payments: [{ method: "CARD", amount: 8998 }] },
+    { daysAgo: 3, itemIdx: 4, qty: 1, payments: [{ method: "QPAY", amount: 8999 }] },
+    {
+      daysAgo: 5,
+      itemIdx: 1,
+      qty: 3,
+      payments: [
+        { method: "CASH", amount: 4500 },
+        { method: "QPAY", amount: 4497 },
+      ],
+    },
+    { daysAgo: 6, itemIdx: 6, qty: 1, payments: [{ method: "CARD", amount: 7499 }] },
+    {
+      daysAgo: 8,
+      itemIdx: 3,
+      qty: 2,
+      payments: [
+        { method: "CASH", amount: 2500 },
+        { method: "TRANSFER", amount: 2498 },
+      ],
+    },
+    { daysAgo: 10, itemIdx: 7, qty: 1, payments: [{ method: "CARD", amount: 5499 }] },
+    { daysAgo: 12, itemIdx: 5, qty: 2, payments: [{ method: "CASH", amount: 3998 }] },
+    { daysAgo: 15, itemIdx: 9, qty: 1, payments: [{ method: "TRANSFER", amount: 12999 }] },
     {
       daysAgo: 18,
       itemIdx: 8,
       qty: 1,
-      payment: "CASH" as const,
+      payments: [{ method: "CASH", amount: 2999 }],
       canceled: true,
     },
   ];
@@ -170,12 +196,14 @@ async function main() {
     const saleDate = new Date(now);
     saleDate.setDate(now.getDate() - s.daysAgo);
     const total = item.sellingPrice * s.qty;
+    const paymentMethod = s.payments.slice().sort((a, b) => b.amount - a.amount)[0].method;
 
     const sale = await prisma.sale.create({
       data: {
         status: s.canceled ? "CANCELED" : "COMPLETED",
         total,
-        paymentMethod: s.payment,
+        paymentMethod,
+        paymentBreakdown: s.payments,
         createdAt: saleDate,
         updatedAt: saleDate,
         items: {
@@ -210,68 +238,17 @@ async function main() {
 
   console.log(`Created ${salesData.length} sales`);
 
-  // Seed expenses
   const expenseData = [
-    {
-      daysAgo: 2,
-      amount: 50000,
-      category: "RENT" as const,
-      description: "Monthly store rent",
-    },
-    {
-      daysAgo: 3,
-      amount: 5000,
-      category: "UTILITIES" as const,
-      description: "Electricity bill",
-    },
-    {
-      daysAgo: 5,
-      amount: 8000,
-      category: "SUPPLIES" as const,
-      description: "Packaging materials",
-    },
-    {
-      daysAgo: 7,
-      amount: 15000,
-      category: "MARKETING" as const,
-      description: "Social media ads",
-    },
-    {
-      daysAgo: 8,
-      amount: 80000,
-      category: "SALARY" as const,
-      description: "Staff salary",
-    },
-    {
-      daysAgo: 10,
-      amount: 3000,
-      category: "UTILITIES" as const,
-      description: "Water bill",
-    },
-    {
-      daysAgo: 12,
-      amount: 6000,
-      category: "SUPPLIES" as const,
-      description: "Hangers & display items",
-    },
-    {
-      daysAgo: 14,
-      amount: 10000,
-      category: "MARKETING" as const,
-      description: "Flyer printing",
-    },
-    {
-      daysAgo: 16,
-      amount: 2000,
-      category: "OTHER" as const,
-      description: "Miscellaneous expenses",
-    },
-    {
-      daysAgo: 19,
-      amount: 4000,
-      category: "SUPPLIES" as const,
-      description: "Cleaning supplies",
-    },
+    { daysAgo: 2, amount: 50000, category: "RENT" as const, description: "Monthly store rent" },
+    { daysAgo: 3, amount: 5000, category: "UTILITIES" as const, description: "Electricity bill" },
+    { daysAgo: 5, amount: 8000, category: "SUPPLIES" as const, description: "Packaging materials" },
+    { daysAgo: 7, amount: 15000, category: "MARKETING" as const, description: "Social media ads" },
+    { daysAgo: 8, amount: 80000, category: "SALARY" as const, description: "Staff salary" },
+    { daysAgo: 10, amount: 3000, category: "UTILITIES" as const, description: "Water bill" },
+    { daysAgo: 12, amount: 6000, category: "SUPPLIES" as const, description: "Hangers & display items" },
+    { daysAgo: 14, amount: 10000, category: "MARKETING" as const, description: "Flyer printing" },
+    { daysAgo: 16, amount: 2000, category: "OTHER" as const, description: "Miscellaneous expenses" },
+    { daysAgo: 19, amount: 4000, category: "SUPPLIES" as const, description: "Cleaning supplies" },
   ];
 
   for (const e of expenseData) {
@@ -295,4 +272,3 @@ async function main() {
 main()
   .catch(console.error)
   .finally(() => prisma.$disconnect());
-

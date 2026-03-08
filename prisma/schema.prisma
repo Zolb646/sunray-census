@@ -53,6 +53,7 @@ enum PaymentMethod {
   CASH
   CARD
   TRANSFER
+  QPAY
   OTHER
 }
 
@@ -63,14 +64,15 @@ enum SaleStatus {
 }
 
 model Sale {
-  id            Int           @id @default(autoincrement())
-  status        SaleStatus    @default(COMPLETED)
-  total         Int
-  paymentMethod PaymentMethod @default(CASH)
-  note          String?
-  createdAt     DateTime      @default(now())
-  updatedAt     DateTime      @updatedAt
-  items         SaleItem[]
+  id               Int           @id @default(autoincrement())
+  status           SaleStatus    @default(COMPLETED)
+  total            Int
+  paymentMethod    PaymentMethod @default(CASH)
+  paymentBreakdown Json?
+  note             String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  items            SaleItem[]
 }
 
 model SaleItem {
