@@ -265,7 +265,7 @@ export function ExpenseTable({ initialExpenses }: ExpenseTableProps) {
                   </TableRow>
                 ) : (
                   filtered.map((expense) => (
-                    <TableRow key={expense.id}>
+                    <TableRow key={expense.id} className="glass-row border-white/20">
                       <TableCell className='px-4 text-sm'>
                         {formatDate(new Date(expense.date))}
                       </TableCell>
@@ -305,7 +305,7 @@ export function ExpenseTable({ initialExpenses }: ExpenseTableProps) {
                     </TableRow>
                   ))
                 )}
-                <TableRow className='bg-muted/35 font-semibold hover:bg-muted/35'>
+                <TableRow className='bg-primary/5 font-semibold border-t border-white/20'>
                   <TableCell colSpan={3} className='pr-4 text-right'>
                     Нийт
                   </TableCell>
@@ -330,7 +330,7 @@ export function ExpenseTable({ initialExpenses }: ExpenseTableProps) {
       </section>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className='rounded-[28px] border-white/70 bg-white/95'>
+        <DialogContent className='glass-dialog rounded-[28px] border-white/60'>
           <DialogHeader>
             <DialogTitle>
               {editingId ? 'Зардал засах' : 'Зардал нэмэх'}
@@ -361,7 +361,7 @@ export function ExpenseTable({ initialExpenses }: ExpenseTableProps) {
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="glass-dialog">
                   {expenseCategoryOptions.map((category) => (
                     <SelectItem key={category.value} value={category.value}>
                       {category.label}
@@ -413,7 +413,7 @@ export function ExpenseTable({ initialExpenses }: ExpenseTableProps) {
         open={!!deleteId}
         onOpenChange={(open) => !open && setDeleteId(null)}
       >
-        <DialogContent className='rounded-[28px] border-white/70 bg-white/95'>
+        <DialogContent className='glass-dialog rounded-[28px] border-white/60'>
           <DialogHeader>
             <DialogTitle>Зардал устгах</DialogTitle>
           </DialogHeader>

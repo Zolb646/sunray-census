@@ -308,13 +308,13 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-end">
-        <Button onClick={() => setCreateOpen(true)}>+ Add Sale</Button>
+      <div className="panel-surface flex flex-wrap items-center justify-end gap-4 rounded-2xl border-white/70 p-4">
+        <Button onClick={() => setCreateOpen(true)} className="rounded-xl shadow-sm">+ Add Sale</Button>
       </div>
 
-      <div className="rounded-md border">
+      <div className="panel-surface rounded-[24px] border-white/70">
         <Table>
-          <TableHeader>
+          <TableHeader className='bg-primary/5'>
             <TableRow>
               <TableHead>No.</TableHead>
               <TableHead>Date</TableHead>
@@ -341,8 +341,8 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
                   .join(", ");
 
                 return (
-                  <TableRow key={sale.id}>
-                    <TableCell className="text-sm text-muted-foreground">
+                  <TableRow key={sale.id} className='glass-row border-white/20'>
+                    <TableCell className="text-sm text-foreground/70">
                       #{sale.id}
                     </TableCell>
                     <TableCell className="text-sm">
@@ -387,12 +387,12 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
       </div>
 
       <Dialog open={createOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="min-w-2xl">
+        <DialogContent className="glass-dialog min-w-2xl border-white/60">
           <DialogHeader>
             <DialogTitle>New Sale</DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateSale} className="space-y-4">
-            <Card>
+            <Card className="panel-surface border-white/30 bg-white/5">
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <CardTitle className="text-sm">Add multiple items in one sale</CardTitle>
                 <Button type="button" variant="outline" size="sm" onClick={addLine}>
@@ -417,7 +417,7 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
                           <SelectTrigger>
                             <SelectValue placeholder="Select item..." />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="glass-dialog">
                             {availableItems.map((item) => (
                               <SelectItem
                                 key={item.id}
@@ -486,7 +486,7 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="panel-surface border-white/30 bg-white/5">
               <CardHeader className="flex flex-row items-center justify-between pb-3">
                 <CardTitle className="text-sm">Split payment</CardTitle>
                 <Button
@@ -519,7 +519,7 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
                           <SelectTrigger>
                             <SelectValue />
                           </SelectTrigger>
-                          <SelectContent>
+                          <SelectContent className="glass-dialog">
                             {paymentMethodOptions.map((option) => (
                               <SelectItem
                                 key={option.value}
@@ -616,7 +616,7 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
       <Dialog
         open={!!cancelId}
         onOpenChange={(open) => !open && setCancelId(null)}>
-        <DialogContent>
+        <DialogContent className="glass-dialog border-white/60">
           <DialogHeader>
             <DialogTitle>Cancel sale #{cancelId}</DialogTitle>
           </DialogHeader>

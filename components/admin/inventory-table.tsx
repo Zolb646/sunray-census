@@ -190,19 +190,20 @@ export function InventoryTable({ initialItems }: InventoryTableProps) {
 
   return (
     <div className='space-y-4'>
-      <div className='flex items-center justify-between gap-4'>
+      <div className='panel-surface flex flex-wrap items-center justify-between gap-4 rounded-2xl border-white/70 p-4'>
         <div className='flex max-w-sm flex-1 items-center gap-2'>
           <Input
             placeholder='Нэр эсвэл дугаараар хайх...'
             value={search}
             onChange={(event) => setSearch(event.target.value)}
+            className='bg-white/50 border-white/40 focus-visible:ring-primary/40'
           />
         </div>
         <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-          <SelectTrigger className='w-40'>
+          <SelectTrigger className='w-40 bg-white/50 border-white/40 focus:ring-primary/40'>
             <SelectValue placeholder='Ангилал' />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className='glass-dialog'>
             <SelectItem value='all'>Бүх ангилал</SelectItem>
             {inventoryCategoryOptions.map((category) => (
               <SelectItem key={category.value} value={category.value}>
@@ -211,12 +212,12 @@ export function InventoryTable({ initialItems }: InventoryTableProps) {
             ))}
           </SelectContent>
         </Select>
-        <Button onClick={openCreate}>+ Бараа нэмэх</Button>
+        <Button onClick={openCreate} className='rounded-xl shadow-sm'>+ Бараа нэмэх</Button>
       </div>
 
-      <div className='rounded-md border'>
+      <div className='panel-surface rounded-[24px] border-white/70'>
         <Table>
-          <TableHeader>
+          <TableHeader className='bg-primary/5'>
             <TableRow>
               <TableHead>№</TableHead>
               <TableHead>Нэр</TableHead>
@@ -240,8 +241,8 @@ export function InventoryTable({ initialItems }: InventoryTableProps) {
                 const isLow = item.stockQty <= item.lowStockThreshold
 
                 return (
-                  <TableRow key={item.id}>
-                    <TableCell className='text-sm text-muted-foreground'>
+                  <TableRow key={item.id} className='glass-row border-white/20'>
+                    <TableCell className='text-sm text-foreground/70'>
                       #{item.id}
                     </TableCell>
                     <TableCell className='font-medium'>{item.name}</TableCell>
@@ -289,7 +290,7 @@ export function InventoryTable({ initialItems }: InventoryTableProps) {
       </div>
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className='max-w-lg'>
+        <DialogContent className='glass-dialog max-w-lg border-white/60'>
           <DialogHeader>
             <DialogTitle>
               {editingItem ? 'Бараа засах' : 'Шинэ бараа нэмэх'}
@@ -314,7 +315,7 @@ export function InventoryTable({ initialItems }: InventoryTableProps) {
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className='glass-dialog'>
                     {inventoryCategoryOptions.map((category) => (
                       <SelectItem key={category.value} value={category.value}>
                         {category.label}
@@ -456,7 +457,7 @@ export function InventoryTable({ initialItems }: InventoryTableProps) {
       ) : null}
 
       <Dialog open={!!deleteId} onOpenChange={(open) => !open && setDeleteId(null)}>
-        <DialogContent>
+        <DialogContent className='glass-dialog border-white/60'>
           <DialogHeader>
             <DialogTitle>Бараа устгах</DialogTitle>
           </DialogHeader>
