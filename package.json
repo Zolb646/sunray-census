@@ -4,9 +4,13 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "build": "next build",
+    "build": "next build --webpack",
     "start": "next start",
     "lint": "eslint",
+    "check:env": "node scripts/validate-env.mjs ci",
+    "check:env:preview": "node scripts/validate-env.mjs preview",
+    "check:env:production": "node scripts/validate-env.mjs production",
+    "migrate:deploy": "prisma migrate deploy",
     "postinstall": "prisma generate"
   },
   "prisma": {

@@ -23,6 +23,7 @@
 # misc
 .DS_Store
 *.pem
+public/uploads/
 
 # debug
 npm-debug.log*
@@ -42,3 +43,5 @@ next-env.d.ts
 
 CLAUDE.md
 .claude
+
+.env*.local
