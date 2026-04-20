@@ -1,10 +1,9 @@
-import { randomUUID } from 'node:crypto'
-import { mkdir, writeFile } from 'node:fs/promises'
-import path from 'node:path'
 import { NextResponse } from 'next/server'
 import { assertAdmin } from '@/lib/auth'
+import { uploadInventoryImage } from '@/lib/inventory-image-storage'
 
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024
 const MIME_TO_EXTENSION: Record<string, string> = {
@@ -40,15 +39,9 @@ export async function POST(request: Request) {
     }
 
     const extension = MIME_TO_EXTENSION[file.type]
-    const fileName = `${Date.now()}-${randomUUID()}.${extension}`
-    const uploadDir = path.join(process.cwd(), 'public', 'uploads', 'inventory')
-    const filePath = path.join(uploadDir, fileName)
-    const fileBuffer = Buffer.from(await file.arrayBuffer())
+    const url = await uploadInventoryImage({ file, extension })
 
-    await mkdir(uploadDir, { recursive: true })
-    await writeFile(filePath, fileBuffer)
-
-    return NextResponse.json({ url: `/uploads/inventory/${fileName}` })
+    return NextResponse.json({ url })
   } catch (error) {
     console.error(error)
 
