@@ -30,13 +30,16 @@ jobs:
       - name: Install dependencies
         run: |
           if [ -f package-lock.json ]; then
-            npm ci
+            npm ci --ignore-scripts
           else
-            npm install
+            npm install --ignore-scripts
           fi
 
       - name: Validate CI environment
         run: npm run check:env
+
+      - name: Generate Prisma client
+        run: npx prisma generate
 
       - name: Lint
         run: npm run lint
@@ -69,13 +72,16 @@ jobs:
       - name: Install dependencies
         run: |
           if [ -f package-lock.json ]; then
-            npm ci
+            npm ci --ignore-scripts
           else
-            npm install
+            npm install --ignore-scripts
           fi
 
       - name: Validate preview environment
         run: npm run check:env:preview
+
+      - name: Generate Prisma client
+        run: npx prisma generate
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
@@ -114,13 +120,16 @@ jobs:
       - name: Install dependencies
         run: |
           if [ -f package-lock.json ]; then
-            npm ci
+            npm ci --ignore-scripts
           else
-            npm install
+            npm install --ignore-scripts
           fi
 
       - name: Validate production environment
         run: npm run check:env:production
+
+      - name: Generate Prisma client
+        run: npx prisma generate
 
       - name: Install Vercel CLI
         run: npm install --global vercel@latest
