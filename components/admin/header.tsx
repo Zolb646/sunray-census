@@ -16,23 +16,23 @@ import { SidebarNav } from '@/components/admin/sidebar'
 const pageMeta: Record<string, { title: string; description: string }> = {
   '/admin': {
     title: 'Хянах самбар',
-    description: 'Revenue, stock health, and monthly performance in one view.',
+    description: 'Орлого, нөөцийн төлөв, сарын үзүүлэлтийг нэг дороос хяална.',
   },
   '/admin/inventory': {
     title: 'Бараа',
-    description: 'Update catalog details, stock levels, and replenishment thresholds.',
+    description: 'Каталог, нөөцийн тоо, дахин захиалах босгыг шинэчилнэ.',
   },
   '/admin/sales': {
     title: 'Борлуулалт',
-    description: 'Capture sales quickly and manage completed orders.',
+    description: 'Борлуулалтыг хурдан бүртгэж, баталгаажсан захиалгуудыг удирдана.',
   },
   '/admin/expenses': {
     title: 'Зардал',
-    description: 'Monitor operating costs and keep the ledger current.',
+    description: 'Үйл ажиллагааны зардлыг хянаж, бүртгэлийг шинэ байлгана.',
   },
   '/admin/reports': {
     title: 'Тайлан',
-    description: 'Review profit, inventory value, and exportable summaries.',
+    description: 'Ашиг, нөөцийн үнэ цэнэ, татаж авах тайлангуудыг харах хэсэг.',
   },
 }
 
@@ -40,12 +40,12 @@ export function Header() {
   const pathname = usePathname()
   const meta = pageMeta[pathname] ?? {
     title: 'Удирдлага',
-    description: 'Sunray back office workspace.',
+    description: 'Sunray удирдлагын ажлын орчин.',
   }
 
   return (
     <header className='sticky top-0 z-30 px-4 pt-4 sm:px-6 lg:px-8'>
-      <div className='panel-surface flex items-center justify-between gap-4 rounded-[28px] px-4 py-4 sm:px-6'>
+      <div className='toolbar-surface flex items-center justify-between gap-4 rounded-[30px] px-4 py-4 backdrop-blur-xl sm:px-6'>
         <div className='flex min-w-0 items-start gap-3'>
           <Sheet>
             <SheetTrigger asChild>
@@ -55,7 +55,7 @@ export function Header() {
                 className='h-11 w-11 rounded-2xl border-white/70 bg-white/70 lg:hidden'
               >
                 <Menu className='h-5 w-5' />
-                <span className='sr-only'>Open navigation</span>
+                <span className='sr-only'>Цэс нээх</span>
               </Button>
             </SheetTrigger>
             <SheetContent
@@ -63,7 +63,7 @@ export function Header() {
               className='w-[22rem] border-white/20 bg-sidebar p-0 text-sidebar-foreground'
             >
               <SheetHeader className='border-b border-white/10 px-5 py-5 text-left'>
-                <SheetTitle className='text-sidebar-foreground'>Sunray Admin</SheetTitle>
+                <SheetTitle className='text-sidebar-foreground'>Sunray удирдлага</SheetTitle>
               </SheetHeader>
               <div className='p-4'>
                 <SidebarNav />
@@ -72,10 +72,8 @@ export function Header() {
           </Sheet>
 
           <div className='min-w-0'>
-            <div className='text-[11px] uppercase tracking-[0.28em] text-muted-foreground'>
-              Sunray operations
-            </div>
-            <h1 className='truncate text-xl font-semibold tracking-tight text-foreground sm:text-2xl'>
+            <div className='section-kicker'>Sunray үйл ажиллагаа</div>
+            <h1 className='display-title truncate pt-1 text-[1.65rem] leading-none font-semibold text-foreground sm:text-[2rem]'>
               {meta.title}
             </h1>
             <p className='mt-1 hidden text-sm text-muted-foreground sm:block'>
@@ -86,7 +84,7 @@ export function Header() {
 
         <div className='flex items-center gap-3'>
           <div className='hidden rounded-full border border-white/70 bg-white/60 px-3 py-1 text-xs text-muted-foreground md:block'>
-            Live admin workspace
+            Идэвхтэй ажлын орчин
           </div>
           <div className='rounded-full border border-white/70 bg-white/70 p-1'>
             <UserButton />

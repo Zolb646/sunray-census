@@ -18,18 +18,18 @@ export function KpiCard({
   className,
 }: KpiCardProps) {
   return (
-    <Card className={cn('panel-surface gap-0 border-white/70 py-0', className)}>
+    <Card className={cn('metric-tile gap-0 rounded-[28px] py-0', className)}>
       <CardHeader className='pb-3 pt-5'>
         <div className='flex items-start justify-between gap-4'>
           <div>
-            <div className='text-[11px] uppercase tracking-[0.24em] text-muted-foreground'>
+            <div className='section-kicker'>
               Snapshot
             </div>
             <CardTitle className='mt-2 text-sm font-medium text-muted-foreground'>
               {title}
             </CardTitle>
           </div>
-          <div className='flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary'>
+          <div className='flex h-11 w-11 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-primary/10'>
             <Icon className='h-5 w-5' />
           </div>
         </div>

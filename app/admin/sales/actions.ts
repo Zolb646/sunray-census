@@ -34,22 +34,22 @@ export async function createSale({
   await assertAdmin()
 
   if (items.length === 0) {
-    throw new Error('Add at least one sale line')
+    throw new Error('Дор хаяж нэг барааны мөр нэмнэ үү')
   }
 
   if (payments.length === 0) {
-    throw new Error('Add at least one payment method')
+    throw new Error('Дор хаяж нэг төлбөрийн хэлбэр нэмнэ үү')
   }
 
   const mergedItems = new Map<number, SaleItemInput>()
 
   for (const item of items) {
     if (item.qty <= 0) {
-      throw new Error('Quantity must be greater than 0')
+      throw new Error('Тоо хэмжээ 0-ээс их байх ёстой')
     }
 
     if (item.unitPrice < 0) {
-      throw new Error('Unit price is invalid')
+      throw new Error('Нэгж үнэ буруу байна')
     }
 
     const existing = mergedItems.get(item.clotheId)
@@ -72,7 +72,7 @@ export async function createSale({
 
   for (const payment of payments) {
     if (payment.amount <= 0) {
-      throw new Error('Payment amounts must be greater than 0')
+      throw new Error('Төлбөрийн дүн 0-ээс их байх ёстой')
     }
 
     mergedPayments.set(
@@ -90,7 +90,7 @@ export async function createSale({
   )
 
   if (paidTotal !== total) {
-    throw new Error('Payment split must exactly match the sale total')
+    throw new Error('Төлбөрийн хуваалт борлуулалтын нийт дүнтэй яг тэнцүү байх ёстой')
   }
 
   const paymentMethod = getPrimaryPaymentMethod(normalizedPayments)
@@ -113,11 +113,11 @@ export async function createSale({
       const stockQty = stockById.get(item.clotheId)
 
       if (stockQty === undefined) {
-        throw new Error('Selected item was not found')
+        throw new Error('Сонгосон бараа олдсонгүй')
       }
 
       if (stockQty < item.qty) {
-        throw new Error('Not enough stock for one or more items')
+        throw new Error('Нэг эсвэл хэд хэдэн барааны нөөц хүрэлцэхгүй байна')
       }
     }
 
@@ -148,7 +148,7 @@ export async function createSale({
           clotheId: item.clotheId,
           changeQty: -item.qty,
           reason: 'SALE',
-          note: `Sale #${newSale.id}`,
+          note: `Борлуулалт #${newSale.id}`,
         },
       })
     }
@@ -169,9 +169,9 @@ export async function cancelSale(saleId: number) {
     include: { items: true },
   })
 
-  if (!sale) throw new Error('Sale not found')
+  if (!sale) throw new Error('Борлуулалт олдсонгүй')
   if (sale.status !== 'COMPLETED') {
-    throw new Error('This sale cannot be canceled')
+    throw new Error('Энэ борлуулалтыг цуцлах боломжгүй')
   }
 
   await prisma.$transaction(async (tx) => {
@@ -190,7 +190,7 @@ export async function cancelSale(saleId: number) {
           clotheId: item.clotheId,
           changeQty: item.qty,
           reason: 'REFUND',
-          note: `Canceled sale #${saleId}`,
+          note: `Цуцлагдсан борлуулалт #${saleId}`,
         },
       })
     }

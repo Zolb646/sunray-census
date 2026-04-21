@@ -68,12 +68,14 @@ export function StockModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent>
+      <DialogContent className='glass-dialog rounded-[30px] border-white/60'>
         <DialogHeader>
-          <DialogTitle>Нөөц тохируулах: {itemName}</DialogTitle>
+          <DialogTitle className='display-title text-3xl'>
+            Нөөц тохируулах: {itemName}
+          </DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1">
+        <form onSubmit={handleSubmit} className='space-y-4'>
+          <div className='space-y-1'>
             <Label>Шалтгаан</Label>
             <Select
               value={reason}
@@ -82,7 +84,7 @@ export function StockModal({
               <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
-              <SelectContent>
+              <SelectContent className='glass-dialog'>
                 {stockReasonOptions.map((option) => (
                   <SelectItem key={option.value} value={option.value}>
                     {option.label}
@@ -91,35 +93,35 @@ export function StockModal({
               </SelectContent>
             </Select>
           </div>
-          <div className="space-y-1">
+          <div className='space-y-1'>
             <Label>Тоо хэмжээ</Label>
             <Input
-              type="number"
-              min="1"
-              placeholder="Тоо оруулна уу"
+              type='number'
+              min='1'
+              placeholder='Тоо оруулна уу'
               value={qty}
               onChange={(e) => setQty(e.target.value)}
               required
             />
           </div>
-          <div className="space-y-1">
+          <div className='space-y-1'>
             <Label>Тайлбар (заавал биш)</Label>
             <Textarea
-              placeholder="Нэмэлт тайлбар..."
+              placeholder='Нэмэлт тайлбар...'
               value={note}
               onChange={(e) => setNote(e.target.value)}
               rows={2}
             />
           </div>
-          <div className="flex justify-end gap-2">
+          <div className='flex justify-end gap-2'>
             <Button
-              type="button"
-              variant="outline"
+              type='button'
+              variant='outline'
               onClick={() => onOpenChange(false)}
             >
               Болих
             </Button>
-            <Button type="submit" disabled={loading}>
+            <Button type='submit' disabled={loading}>
               {loading ? 'Хадгалж байна...' : 'Хадгалах'}
             </Button>
           </div>

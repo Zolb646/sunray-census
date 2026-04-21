@@ -16,12 +16,12 @@ export type PaymentBreakdownEntry = {
 }
 
 export const inventoryCategoryOptions: Option<string>[] = [
-  { value: 'Dress', label: 'Dress' },
-  { value: 'Top', label: 'Top' },
-  { value: 'Pants', label: 'Pants' },
-  { value: 'Skirt', label: 'Skirt' },
-  { value: 'Outerwear', label: 'Outerwear' },
-  { value: 'Other', label: 'Other' },
+  { value: 'Dress', label: 'Даашинз' },
+  { value: 'Top', label: 'Цамц' },
+  { value: 'Pants', label: 'Өмд' },
+  { value: 'Skirt', label: 'Юбка' },
+  { value: 'Outerwear', label: 'Гадуур хувцас' },
+  { value: 'Other', label: 'Бусад' },
 ]
 
 const inventoryCategoryLabels = Object.fromEntries(
@@ -33,12 +33,12 @@ export function getInventoryCategoryLabel(value: string) {
 }
 
 export const expenseCategoryOptions: Option<ExpenseCategory>[] = [
-  { value: 'RENT', label: 'Rent' },
-  { value: 'UTILITIES', label: 'Utilities' },
-  { value: 'SUPPLIES', label: 'Supplies' },
-  { value: 'MARKETING', label: 'Marketing' },
-  { value: 'SALARY', label: 'Salary' },
-  { value: 'OTHER', label: 'Other' },
+  { value: 'RENT', label: 'Түрээс' },
+  { value: 'UTILITIES', label: 'Ашиглалтын зардал' },
+  { value: 'SUPPLIES', label: 'Хангамж' },
+  { value: 'MARKETING', label: 'Маркетинг' },
+  { value: 'SALARY', label: 'Цалин' },
+  { value: 'OTHER', label: 'Бусад' },
 ]
 
 const expenseCategoryLabels = Object.fromEntries(
@@ -50,11 +50,11 @@ export function getExpenseCategoryLabel(value: ExpenseCategory | string) {
 }
 
 export const paymentMethodOptions: Option<PaymentMethod>[] = [
-  { value: 'CASH', label: 'Cash' },
-  { value: 'CARD', label: 'Card' },
-  { value: 'TRANSFER', label: 'Bank Transfer' },
+  { value: 'CASH', label: 'Бэлэн' },
+  { value: 'CARD', label: 'Карт' },
+  { value: 'TRANSFER', label: 'Дансны шилжүүлэг' },
   { value: 'QPAY', label: 'QPay' },
-  { value: 'OTHER', label: 'Other' },
+  { value: 'OTHER', label: 'Бусад' },
 ]
 
 const paymentMethodLabels = Object.fromEntries(
@@ -108,9 +108,9 @@ export function formatPaymentBreakdown(
 }
 
 export const saleStatusLabels: Record<SaleStatus, string> = {
-  COMPLETED: 'Completed',
-  CANCELED: 'Canceled',
-  REFUNDED: 'Refunded',
+  COMPLETED: 'Баталгаажсан',
+  CANCELED: 'Цуцлагдсан',
+  REFUNDED: 'Буцаасан',
 }
 
 export function getSaleStatusLabel(value: SaleStatus | string) {
@@ -122,8 +122,8 @@ export const stockReasonOptions: Array<{
   label: string
   sign: 1 | -1
 }> = [
-  { value: 'RESTOCK', label: 'Restock (+)', sign: 1 },
-  { value: 'ADJUSTMENT', label: 'Adjustment (+/-)', sign: 1 },
-  { value: 'DAMAGE', label: 'Damage (-)', sign: -1 },
-  { value: 'LOSS', label: 'Loss (-)', sign: -1 },
+  { value: 'RESTOCK', label: 'Нөөц нэмэх (+)', sign: 1 },
+  { value: 'ADJUSTMENT', label: 'Тохируулга (+/-)', sign: 1 },
+  { value: 'DAMAGE', label: 'Гэмтэл (-)', sign: -1 },
+  { value: 'LOSS', label: 'Хорогдол (-)', sign: -1 },
 ]

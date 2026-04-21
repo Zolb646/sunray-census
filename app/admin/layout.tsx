@@ -10,7 +10,7 @@ export default async function AdminLayout({
   await requireAdminPageAccess();
 
   return (
-    <div className="relative min-h-screen">
+    <div className="relative min-h-screen workspace-shell">
       <div className="admin-mesh pointer-events-none absolute inset-x-0 top-0 h-[420px] opacity-60" />
       <div className="pointer-events-none absolute -left-40 -top-32 h-72 w-72 rounded-full bg-[radial-gradient(circle,rgba(255,216,160,0.65),transparent_68%)] blur-3xl" />
       <div className="pointer-events-none absolute -right-32 top-16 h-80 w-80 rounded-full bg-[radial-gradient(circle,rgba(241,160,119,0.28),transparent_72%)] blur-3xl" />

@@ -72,17 +72,15 @@ export function SalesChart({ data }: SalesChartProps) {
         : aggregateMonthly(data)
 
   return (
-    <Card className='panel-surface gap-0 border-white/70 py-0'>
+    <Card className='panel-surface gap-0 rounded-[32px] border-white/70 py-0'>
       <CardHeader className='flex flex-col gap-4 pb-4 pt-6 sm:flex-row sm:items-center sm:justify-between'>
         <div>
-          <div className='text-[11px] uppercase tracking-[0.28em] text-muted-foreground'>
-            Trendline
-          </div>
-          <CardTitle className='mt-2 text-xl font-semibold tracking-tight'>
+          <div className='section-kicker'>Чиг хандлага</div>
+          <CardTitle className='display-title mt-2 text-[1.9rem] font-semibold tracking-tight'>
             Борлуулалтын тойм
           </CardTitle>
           <p className='mt-1 text-sm text-muted-foreground'>
-            Compare short-term movement and broader revenue momentum.
+            Богино хугацааны хөдөлгөөн болон өргөн хүрээний орлогын эрчийг харьцуулна.
           </p>
         </div>
 
@@ -104,11 +102,14 @@ export function SalesChart({ data }: SalesChartProps) {
       <CardContent className='pb-6'>
         {chartData.length === 0 ? (
           <div className='flex h-[320px] items-center justify-center rounded-[24px] border border-dashed border-border bg-white/55 text-sm text-muted-foreground'>
-            No completed sales in the selected window yet.
+            Сонгосон хугацаанд баталгаажсан борлуулалт бүртгэгдээгүй байна.
           </div>
         ) : (
           <ResponsiveContainer width='100%' height={320}>
-            <BarChart data={chartData} margin={{ top: 12, right: 8, left: -16, bottom: 0 }}>
+            <BarChart
+              data={chartData}
+              margin={{ top: 12, right: 8, left: -16, bottom: 0 }}
+            >
               <CartesianGrid stroke='oklch(0.89 0.013 84.1)' vertical={false} />
               <XAxis
                 dataKey='date'
@@ -121,7 +122,12 @@ export function SalesChart({ data }: SalesChartProps) {
                 axisLine={false}
                 tickLine={false}
                 tick={{ fontSize: 12, fill: 'oklch(0.54 0.02 36.6)' }}
-                tickFormatter={(value: number) => new Intl.NumberFormat('mn-MN', { notation: 'compact', maximumFractionDigits: 1 }).format(value)}
+                tickFormatter={(value: number) =>
+                  new Intl.NumberFormat('mn-MN', {
+                    notation: 'compact',
+                    maximumFractionDigits: 1,
+                  }).format(value)
+                }
               />
               <Tooltip
                 cursor={{ fill: 'rgba(111, 78, 55, 0.06)' }}
@@ -134,7 +140,12 @@ export function SalesChart({ data }: SalesChartProps) {
                 formatter={(value) => [formatCents(Number(value ?? 0)), 'Борлуулалт']}
                 labelFormatter={(label) => `Огноо: ${String(label ?? '')}`}
               />
-              <Bar dataKey='total' fill='var(--color-chart-1)' radius={[16, 16, 6, 6]} maxBarSize={42} />
+              <Bar
+                dataKey='total'
+                fill='var(--color-chart-1)'
+                radius={[16, 16, 6, 6]}
+                maxBarSize={42}
+              />
             </BarChart>
           </ResponsiveContainer>
         )}
@@ -142,4 +153,3 @@ export function SalesChart({ data }: SalesChartProps) {
     </Card>
   )
 }
-
