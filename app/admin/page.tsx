@@ -76,11 +76,6 @@ export default async function DashboardPage() {
   const monthRevenue = monthSales._sum.total ?? 0;
   const monthExpenseTotal = monthExpenses._sum.amount ?? 0;
   const monthProfit = monthRevenue - monthExpenseTotal;
-  const stockCoverage =
-    totalItems > 0
-      ? Math.round(((totalItems - lowStockCount) / totalItems) * 100)
-      : 100;
-
   return (
     <div className="workspace-shell space-y-6">
       {/* <div className="grid gap-3 grid-cols-2 self-end">

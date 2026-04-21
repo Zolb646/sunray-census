@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import Papa from "papaparse";
 import { type DateRange } from "react-day-picker";
 import { getReportData } from "@/app/admin/reports/actions";
@@ -8,7 +8,7 @@ import {
   getExpenseCategoryLabel,
   getInventoryCategoryLabel,
 } from "@/lib/localization";
-import { endOfDay, formatCents, formatDate, startOfMonth } from "@/lib/utils";
+import { endOfDay, formatCents, formatDate } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -16,6 +16,11 @@ import { DateRangePicker } from "@/components/ui/date-range-picker";
 import { Skeleton } from "@/components/ui/skeleton";
 
 type ReportData = Awaited<ReturnType<typeof getReportData>>;
+
+interface ReportsViewProps {
+  initialData: ReportData;
+  initialDateRange: DateRange;
+}
 
 function downloadCsv(filename: string, data: object[]) {
   const csv = `\uFEFF${Papa.unparse(data)}`;
@@ -28,15 +33,14 @@ function downloadCsv(filename: string, data: object[]) {
   URL.revokeObjectURL(url);
 }
 
-export function ReportsView() {
-  const [dateRange, setDateRange] = useState<DateRange | undefined>(() => {
-    const now = new Date();
-    return {
-      from: startOfMonth(now),
-      to: now,
-    };
-  });
-  const [data, setData] = useState<ReportData | null>(null);
+export function ReportsView({
+  initialData,
+  initialDateRange,
+}: ReportsViewProps) {
+  const [dateRange, setDateRange] = useState<DateRange | undefined>(
+    initialDateRange,
+  );
+  const [data, setData] = useState<ReportData | null>(initialData);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -54,11 +58,6 @@ export function ReportsView() {
       setLoading(false);
     }
   }
-
-  useEffect(() => {
-    const now = new Date();
-    void loadReport(startOfMonth(now), now);
-  }, []);
 
   async function handleLoad() {
     const fromDate = dateRange?.from;
@@ -191,8 +190,8 @@ export function ReportsView() {
                     Шилдэг 5 бараа
                   </CardTitle>
                   <p className="mt-1 text-sm text-muted-foreground">
-                    Энэ тайланд {data.salesCount} баталгаажсан борлуулалт
-                    багтсан байна.
+                    Энэ тайланд {data.salesCount} баталгаажсан борлуулалт багтсан
+                    байна.
                   </p>
                 </div>
                 <Button

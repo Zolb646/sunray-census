@@ -1,13 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type {
   ClothingItem,
   PaymentMethod,
   Sale,
   SaleItem,
 } from "@prisma/client";
-import { Layers3, ReceiptText, Undo2 } from "lucide-react";
+import { Layers3 } from "lucide-react";
 import { cancelSale, createSale } from "@/app/admin/sales/actions";
 import {
   formatPaymentBreakdown,
@@ -169,25 +169,6 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
 
   const paymentDifference = cartTotal - paymentTotal;
 
-  useEffect(() => {
-    if (paymentLines.length !== 1) {
-      return;
-    }
-
-    setPaymentLines((prev) => {
-      if (prev.length !== 1) {
-        return prev;
-      }
-
-      const nextAmount = cartTotal > 0 ? String(cartTotal) : "0";
-      if (prev[0].amount === nextAmount) {
-        return prev;
-      }
-
-      return [{ ...prev[0], amount: nextAmount }];
-    });
-  }, [cartTotal, paymentLines.length]);
-
   function resetSaleForm() {
     setDraftLines([createDraftLine(1)]);
     setPaymentLines([createPaymentLine(1)]);
@@ -264,6 +245,16 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
     updatePaymentLine(key, { amount: String(nextAmount) });
   }
 
+  const displayPaymentLines =
+    paymentLines.length === 1
+      ? [
+          {
+            ...paymentLines[0],
+            amount: cartTotal > 0 ? String(cartTotal) : "0",
+          },
+        ]
+      : paymentLines;
+
   async function handleCreateSale(e: React.FormEvent) {
     e.preventDefault();
 
@@ -272,7 +263,7 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
       return;
     }
 
-    const normalizedPayments = paymentLines
+    const normalizedPayments = displayPaymentLines
       .map((line) => ({
         method: line.method,
         amount: Number.parseInt(line.amount, 10),
@@ -597,8 +588,8 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
                 </Button>
               </CardHeader>
               <CardContent className="space-y-3">
-                {paymentLines.map((line, index) => {
-                  const selectedMethods = paymentLines
+                {displayPaymentLines.map((line, index) => {
+                  const selectedMethods = displayPaymentLines
                     .filter((entry) => entry.key !== line.key)
                     .map((entry) => entry.method);
 

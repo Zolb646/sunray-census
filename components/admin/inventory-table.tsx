@@ -1,8 +1,8 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import type { ClothingItem } from "@prisma/client";
-import { AlertTriangle, Boxes, Search, Tags } from "lucide-react";
+import { Boxes, Search } from "lucide-react";
 import {
   createItem,
   deleteItem,
@@ -93,19 +93,6 @@ export function InventoryTable({ initialItems }: InventoryTableProps) {
 
     return matchSearch && matchCategory;
   });
-
-  const totalStock = useMemo(
-    () => filtered.reduce((sum, item) => sum + item.stockQty, 0),
-    [filtered],
-  );
-  const totalCatalogValue = useMemo(
-    () =>
-      filtered.reduce((sum, item) => sum + item.costPrice * item.stockQty, 0),
-    [filtered],
-  );
-  const lowStockCount = filtered.filter(
-    (item) => item.stockQty <= item.lowStockThreshold,
-  ).length;
 
   function resetForm() {
     setForm(emptyForm);

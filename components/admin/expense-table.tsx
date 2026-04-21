@@ -106,8 +106,6 @@ export function ExpenseTable({ initialExpenses }: ExpenseTableProps) {
     (sum, expense) => sum + expense.amount,
     0,
   );
-  const activeFilterCount =
-    Number(Boolean(dateRange?.from)) + Number(categoryFilter !== "all");
   const rangeLabel = dateRange?.from
     ? dateRange.to
       ? `${formatDate(dateRange.from)} - ${formatDate(dateRange.to)}`
