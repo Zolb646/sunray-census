@@ -32,11 +32,11 @@ function Calendar({
         ),
         button_previous: cn(
           buttonVariants({ variant: "outline" }),
-          "absolute left-1 size-7 bg-transparent p-0 opacity-60 hover:opacity-100",
+          "absolute left-1 size-7 top-2 bg-transparent p-0 opacity-60 hover:opacity-100",
         ),
         button_next: cn(
           buttonVariants({ variant: "outline" }),
-          "absolute right-1 size-7 bg-transparent p-0 opacity-60 hover:opacity-100",
+          "absolute right-1 size-7 top-2 bg-transparent p-0 opacity-60 hover:opacity-100",
         ),
         month_grid: "w-full border-collapse",
         weekdays: "flex w-full",

@@ -1,19 +1,25 @@
-import { clsx, type ClassValue } from "clsx"
-import { twMerge } from "tailwind-merge"
+import { clsx, type ClassValue } from 'clsx'
+import { twMerge } from 'tailwind-merge'
 
 export function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs))
 }
 
 export function formatCents(cents: number): string {
-  return new Intl.NumberFormat('mn-MN', {
-    style: 'currency',
-    currency: 'MNT',
+  const formatted = new Intl.NumberFormat('mn-MN', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
   }).format(cents)
+
+  return `₮ ${formatted}`
 }
 
 export function formatDate(date: Date): string {
-  return new Intl.DateTimeFormat('mn-MN').format(date)
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+
+  return `${year}.${month}.${day}`
 }
 
 export function parseToCents(str: string): number {
@@ -37,4 +43,3 @@ export function endOfDay(date: Date = new Date()): Date {
 export function startOfMonth(date: Date = new Date()): Date {
   return new Date(date.getFullYear(), date.getMonth(), 1)
 }
-

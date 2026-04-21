@@ -29,18 +29,21 @@ export function DateRangePicker({
   placeholder = "Pick a date range",
   numberOfMonths = 2,
 }: DateRangePickerProps) {
-  const [dateRange, setDateRange] = React.useState<DateRange | undefined>({
+  const [internalDateRange, setInternalDateRange] = React.useState<
+    DateRange | undefined
+  >(() => ({
     from: new Date(new Date().getFullYear(), 0, 12),
     to: addDays(new Date(new Date().getFullYear(), 0, 12), 30),
-  });
+  }));
 
-  React.useEffect(() => {
-    setDateRange(value ?? undefined);
-  }, [value]);
+  const dateRange = value ?? internalDateRange;
 
   function handleSelect(range: DateRange | undefined) {
-    setDateRange(range);
-    if (onChange) onChange(range);
+    if (value === undefined) {
+      setInternalDateRange(range);
+    }
+
+    onChange?.(range);
   }
 
   return (

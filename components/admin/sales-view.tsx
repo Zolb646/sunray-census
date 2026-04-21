@@ -1,12 +1,13 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import type {
   ClothingItem,
   PaymentMethod,
   Sale,
   SaleItem,
 } from "@prisma/client";
+import { Layers3 } from "lucide-react";
 import { cancelSale, createSale } from "@/app/admin/sales/actions";
 import {
   formatPaymentBreakdown,
@@ -98,7 +99,9 @@ function createPaymentLine(key: number): PaymentDraftLine {
 export function SalesView({ initialSales, availableItems }: SalesViewProps) {
   const [createOpen, setCreateOpen] = useState(false);
   const [cancelId, setCancelId] = useState<number | null>(null);
-  const [draftLines, setDraftLines] = useState<SaleDraftLine[]>([createDraftLine(1)]);
+  const [draftLines, setDraftLines] = useState<SaleDraftLine[]>([
+    createDraftLine(1),
+  ]);
   const [paymentLines, setPaymentLines] = useState<PaymentDraftLine[]>([
     createPaymentLine(1),
   ]);
@@ -107,6 +110,22 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
   const [note, setNote] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+
+  const completedSales = initialSales.filter(
+    (sale) => sale.status === "COMPLETED",
+  );
+  const completedRevenue = completedSales.reduce(
+    (sum, sale) => sum + sale.total,
+    0,
+  );
+  const canceledSales = initialSales.filter(
+    (sale) => sale.status === "CANCELED",
+  ).length;
+  const unitsSold = completedSales.reduce(
+    (sum, sale) =>
+      sum + sale.items.reduce((itemSum, item) => itemSum + item.qty, 0),
+    0,
+  );
 
   const cart = useMemo<CartLine[]>(() => {
     return draftLines
@@ -149,25 +168,6 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
   );
 
   const paymentDifference = cartTotal - paymentTotal;
-
-  useEffect(() => {
-    if (paymentLines.length !== 1) {
-      return;
-    }
-
-    setPaymentLines((prev) => {
-      if (prev.length !== 1) {
-        return prev;
-      }
-
-      const nextAmount = cartTotal > 0 ? String(cartTotal) : "0";
-      if (prev[0].amount === nextAmount) {
-        return prev;
-      }
-
-      return [{ ...prev[0], amount: nextAmount }];
-    });
-  }, [cartTotal, paymentLines.length]);
 
   function resetSaleForm() {
     setDraftLines([createDraftLine(1)]);
@@ -245,15 +245,25 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
     updatePaymentLine(key, { amount: String(nextAmount) });
   }
 
+  const displayPaymentLines =
+    paymentLines.length === 1
+      ? [
+          {
+            ...paymentLines[0],
+            amount: cartTotal > 0 ? String(cartTotal) : "0",
+          },
+        ]
+      : paymentLines;
+
   async function handleCreateSale(e: React.FormEvent) {
     e.preventDefault();
 
     if (cart.length === 0) {
-      setError("Select at least one item.");
+      setError("Дор хаяж нэг бараа сонгоно уу.");
       return;
     }
 
-    const normalizedPayments = paymentLines
+    const normalizedPayments = displayPaymentLines
       .map((line) => ({
         method: line.method,
         amount: Number.parseInt(line.amount, 10),
@@ -261,12 +271,12 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
       .filter((line) => Number.isFinite(line.amount) && line.amount > 0);
 
     if (normalizedPayments.length === 0) {
-      setError("Add at least one payment amount.");
+      setError("Дор хаяж нэг төлбөрийн дүн оруулна уу.");
       return;
     }
 
     if (paymentDifference !== 0) {
-      setError("Payment total must match the sale total exactly.");
+      setError("Төлбөрийн нийлбэр борлуулалтын дүнтэй яг тэнцүү байх ёстой.");
       return;
     }
 
@@ -287,7 +297,7 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
       resetSaleForm();
     } catch (err) {
       setError(
-        err instanceof Error ? err.message : "Failed to create sale.",
+        err instanceof Error ? err.message : "Борлуулалт үүсгэж чадсангүй.",
       );
     } finally {
       setLoading(false);
@@ -307,22 +317,76 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
   }
 
   return (
-    <div className="space-y-4">
-      <div className="panel-surface flex flex-wrap items-center justify-end gap-4 rounded-2xl border-white/70 p-4">
-        <Button onClick={() => setCreateOpen(true)} className="rounded-xl shadow-sm">+ Add Sale</Button>
-      </div>
+    <div className="space-y-6">
+      <section className="workspace-hero rounded-[34px] px-5 py-6 sm:px-7">
+        <div className="grid gap-3 sm:grid-cols-4">
+          <div className="metric-tile rounded-[24px] p-4">
+            <p className="text-sm text-muted-foreground">Баталгаажсан орлого</p>
+            <div className="mt-2 text-3xl font-semibold tracking-tight">
+              {formatCents(completedRevenue)}
+            </div>
+          </div>
+          <div className="metric-tile rounded-[24px] p-4">
+            <p className="text-sm text-muted-foreground">Зарагдсан тоо</p>
+            <div className="mt-2 text-3xl font-semibold tracking-tight">
+              {unitsSold}
+            </div>
+          </div>
+          <div className="metric-tile rounded-[24px] p-4">
+            <p className="text-sm text-muted-foreground">Нээлттэй каталог</p>
+            <div className="mt-2 text-3xl font-semibold tracking-tight">
+              {availableItems.length}
+            </div>
+          </div>
+          <div className="metric-tile rounded-[24px] p-4">
+            <p className="text-sm text-muted-foreground">
+              Цуцлагдсан борлуулалт
+            </p>
+            <div className="mt-2 text-3xl font-semibold tracking-tight">
+              {canceledSales}
+            </div>
+          </div>
+        </div>
+      </section>
 
-      <div className="panel-surface rounded-[24px] border-white/70">
+      <section className="toolbar-surface flex flex-wrap items-center justify-between gap-4 rounded-[28px] p-4">
+        <div>
+          <div className="section-kicker">Үйлдэл</div>
+          <p className="mt-2 text-sm text-muted-foreground">
+            Шинэ борлуулалт үүсгэхийн өмнө төлбөрийн дүнгээ бүрэн тааруулна уу.
+          </p>
+        </div>
+        <Button
+          onClick={() => setCreateOpen(true)}
+          className="rounded-full px-5">
+          + Борлуулалт нэмэх
+        </Button>
+      </section>
+
+      <section className="table-surface rounded-[30px]">
+        <div className="flex items-center justify-between gap-4 border-b soft-divider px-5 py-4">
+          <div>
+            <div className="section-kicker">Бүртгэлийн түүх</div>
+            <h3 className="mt-2 text-xl font-semibold tracking-tight">
+              Сүүлийн борлуулалт
+            </h3>
+          </div>
+          <div className="hidden items-center gap-2 text-xs text-muted-foreground sm:flex">
+            <Layers3 className="h-4 w-4" />
+            Сүүлийн 100 гүйлгээг харуулж байна
+          </div>
+        </div>
+
         <Table>
-          <TableHeader className='bg-primary/5'>
+          <TableHeader className="bg-primary/5">
             <TableRow>
-              <TableHead>No.</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Items</TableHead>
-              <TableHead>Total</TableHead>
-              <TableHead>Payments</TableHead>
-              <TableHead>Status</TableHead>
-              <TableHead>Action</TableHead>
+              <TableHead>Д/д</TableHead>
+              <TableHead>Огноо</TableHead>
+              <TableHead>Бараа</TableHead>
+              <TableHead>Дүн</TableHead>
+              <TableHead>Төлбөр</TableHead>
+              <TableHead>Төлөв</TableHead>
+              <TableHead>Үйлдэл</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -330,8 +394,8 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
               <TableRow>
                 <TableCell
                   colSpan={7}
-                  className="py-8 text-center text-muted-foreground">
-                  No sales yet
+                  className="py-12 text-center text-muted-foreground">
+                  Борлуулалтын бүртгэл алга
                 </TableCell>
               </TableRow>
             ) : (
@@ -341,7 +405,7 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
                   .join(", ");
 
                 return (
-                  <TableRow key={sale.id} className='glass-row border-white/20'>
+                  <TableRow key={sale.id} className="glass-row border-white/20">
                     <TableCell className="text-sm text-foreground/70">
                       #{sale.id}
                     </TableCell>
@@ -369,14 +433,15 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
                       </Badge>
                     </TableCell>
                     <TableCell>
-                      {sale.status === "COMPLETED" && (
+                      {sale.status === "COMPLETED" ? (
                         <Button
                           size="sm"
                           variant="destructive"
+                          className="rounded-full"
                           onClick={() => setCancelId(sale.id)}>
-                          Cancel
+                          Цуцлах
                         </Button>
-                      )}
+                      ) : null}
                     </TableCell>
                   </TableRow>
                 );
@@ -384,58 +449,78 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
             )}
           </TableBody>
         </Table>
-      </div>
+      </section>
 
       <Dialog open={createOpen} onOpenChange={handleOpenChange}>
-        <DialogContent className="glass-dialog min-w-2xl border-white/60">
+        <DialogContent className="glass-dialog min-w-2xl rounded-[32px] border-white/60">
           <DialogHeader>
-            <DialogTitle>New Sale</DialogTitle>
+            <DialogTitle className="display-title text-3xl">
+              Шинэ борлуулалт
+            </DialogTitle>
           </DialogHeader>
           <form onSubmit={handleCreateSale} className="space-y-4">
-            <Card className="panel-surface border-white/30 bg-white/5">
+            <Card className="panel-surface rounded-[28px] border-white/30 bg-white/5">
               <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="text-sm">Add multiple items in one sale</CardTitle>
-                <Button type="button" variant="outline" size="sm" onClick={addLine}>
-                  + Add Line
+                <div>
+                  <CardTitle className="text-base">Сагс</CardTitle>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Төлбөр хуваахаас өмнө нэг эсвэл хэд хэдэн бараа нэмнэ үү.
+                  </p>
+                </div>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="sm"
+                  onClick={addLine}>
+                  + Мөр нэмэх
                 </Button>
               </CardHeader>
               <CardContent className="space-y-3">
                 {draftLines.map((line, index) => {
                   const selectedIds = draftLines
-                    .filter((entry) => entry.key !== line.key && entry.itemId !== "")
+                    .filter(
+                      (entry) => entry.key !== line.key && entry.itemId !== "",
+                    )
                     .map((entry) => entry.itemId);
 
                   return (
                     <div
                       key={line.key}
-                      className="grid grid-cols-[minmax(0,1fr)_96px_88px] gap-2 rounded-lg border p-3">
+                      className="grid grid-cols-[minmax(0,1fr)_96px_88px] gap-2 rounded-[22px] border border-white/50 bg-white/50 p-3">
                       <div className="space-y-1">
-                        <Label>Item {index + 1}</Label>
+                        <Label>Бараа {index + 1}</Label>
                         <Select
                           value={line.itemId}
-                          onValueChange={(value) => updateLine(line.key, { itemId: value })}>
+                          onValueChange={(value) =>
+                            updateLine(line.key, { itemId: value })
+                          }>
                           <SelectTrigger>
-                            <SelectValue placeholder="Select item..." />
+                            <SelectValue placeholder="Бараа сонгох..." />
                           </SelectTrigger>
                           <SelectContent className="glass-dialog">
                             {availableItems.map((item) => (
                               <SelectItem
                                 key={item.id}
                                 value={item.id.toString()}
-                                disabled={selectedIds.includes(item.id.toString())}>
-                                {item.name} - {formatCents(item.sellingPrice)} (stock: {item.stockQty})
+                                disabled={selectedIds.includes(
+                                  item.id.toString(),
+                                )}>
+                                {item.name} - {formatCents(item.sellingPrice)}{" "}
+                                (нөөц: {item.stockQty})
                               </SelectItem>
                             ))}
                           </SelectContent>
                         </Select>
                       </div>
                       <div className="space-y-1">
-                        <Label>Qty</Label>
+                        <Label>Тоо</Label>
                         <Input
                           type="number"
                           min="1"
                           value={line.qty}
-                          onChange={(e) => updateLine(line.key, { qty: e.target.value })}
+                          onChange={(e) =>
+                            updateLine(line.key, { qty: e.target.value })
+                          }
                         />
                       </div>
                       <div className="flex items-end">
@@ -444,21 +529,21 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
                           variant="ghost"
                           className="w-full text-destructive"
                           onClick={() => removeLine(line.key)}>
-                          Remove
+                          Хасах
                         </Button>
                       </div>
                     </div>
                   );
                 })}
 
-                {cart.length > 0 && (
+                {cart.length > 0 ? (
                   <>
                     <Separator />
                     <div className="space-y-2">
                       {cart.map((line) => (
                         <div
                           key={line.key}
-                          className="flex items-center justify-between rounded bg-muted/50 px-3 py-2 text-sm">
+                          className="flex items-center justify-between rounded-[20px] bg-muted/40 px-3 py-3 text-sm">
                           <div>
                             <div className="font-medium">{line.name}</div>
                             <div className="text-muted-foreground">
@@ -470,7 +555,7 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
                               {formatCents(line.qty * line.unitPrice)}
                             </div>
                             <div className="text-muted-foreground">
-                              Stock: {line.stockQty}
+                              Нөөц: {line.stockQty}
                             </div>
                           </div>
                         </div>
@@ -478,37 +563,42 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
                     </div>
                     <Separator />
                     <div className="flex justify-between px-2 text-sm font-semibold">
-                      <span>Total</span>
+                      <span>Нийт дүн</span>
                       <span>{formatCents(cartTotal)}</span>
                     </div>
                   </>
-                )}
+                ) : null}
               </CardContent>
             </Card>
 
-            <Card className="panel-surface border-white/30 bg-white/5">
+            <Card className="panel-surface rounded-[28px] border-white/30 bg-white/5">
               <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="text-sm">Split payment</CardTitle>
+                <div>
+                  <CardTitle className="text-base">Төлбөрийн хуваалт</CardTitle>
+                  <p className="mt-1 text-sm text-muted-foreground">
+                    Төлбөрийн нийлбэрийг борлуулалтын дүнтэй яг тэнцүүлнэ үү.
+                  </p>
+                </div>
                 <Button
                   type="button"
                   variant="outline"
                   size="sm"
                   onClick={addPaymentLine}>
-                  + Add Payment
+                  + Төлбөр нэмэх
                 </Button>
               </CardHeader>
               <CardContent className="space-y-3">
-                {paymentLines.map((line, index) => {
-                  const selectedMethods = paymentLines
+                {displayPaymentLines.map((line, index) => {
+                  const selectedMethods = displayPaymentLines
                     .filter((entry) => entry.key !== line.key)
                     .map((entry) => entry.method);
 
                   return (
                     <div
                       key={line.key}
-                      className="grid grid-cols-[minmax(0,1fr)_120px_120px_88px] gap-2 rounded-lg border p-3">
+                      className="grid grid-cols-[minmax(0,1fr)_120px_120px_88px] gap-2 rounded-[22px] border border-white/50 bg-white/50 p-3">
                       <div className="space-y-1">
-                        <Label>Payment {index + 1}</Label>
+                        <Label>Төлбөр {index + 1}</Label>
                         <Select
                           value={line.method}
                           onValueChange={(value) =>
@@ -524,7 +614,9 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
                               <SelectItem
                                 key={option.value}
                                 value={option.value}
-                                disabled={selectedMethods.includes(option.value)}>
+                                disabled={selectedMethods.includes(
+                                  option.value,
+                                )}>
                                 {option.label}
                               </SelectItem>
                             ))}
@@ -532,14 +624,16 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
                         </Select>
                       </div>
                       <div className="space-y-1">
-                        <Label>Amount</Label>
+                        <Label>Дүн</Label>
                         <Input
                           type="number"
                           min="0"
                           step="1"
                           value={line.amount}
                           onChange={(e) =>
-                            updatePaymentLine(line.key, { amount: e.target.value })
+                            updatePaymentLine(line.key, {
+                              amount: e.target.value,
+                            })
                           }
                         />
                       </div>
@@ -549,7 +643,7 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
                           variant="outline"
                           className="w-full"
                           onClick={() => fillRemainingAmount(line.key)}>
-                          Fill Rest
+                          Үлдэгдэл дүүргэх
                         </Button>
                       </div>
                       <div className="flex items-end">
@@ -558,19 +652,19 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
                           variant="ghost"
                           className="w-full text-destructive"
                           onClick={() => removePaymentLine(line.key)}>
-                          Remove
+                          Хасах
                         </Button>
                       </div>
                     </div>
                   );
                 })}
 
-                <div className="flex items-center justify-between rounded-md bg-muted/50 px-3 py-2 text-sm">
-                  <span>Paid so far</span>
+                <div className="flex items-center justify-between rounded-[20px] bg-muted/40 px-3 py-3 text-sm">
+                  <span>Оруулсан төлбөр</span>
                   <span>{formatCents(paymentTotal)}</span>
                 </div>
-                <div className="flex items-center justify-between rounded-md border px-3 py-2 text-sm">
-                  <span>Remaining</span>
+                <div className="flex items-center justify-between rounded-[20px] border border-white/50 px-3 py-3 text-sm">
+                  <span>Үлдэгдэл</span>
                   <span
                     className={
                       paymentDifference === 0
@@ -584,29 +678,31 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
             </Card>
 
             <div className="space-y-1">
-              <Label>Note (optional)</Label>
+              <Label>Тэмдэглэл (заавал биш)</Label>
               <Textarea
                 value={note}
                 onChange={(e) => setNote(e.target.value)}
-                rows={1}
+                rows={2}
               />
             </div>
 
-            {error && (
-              <p className="rounded-md border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
+            {error ? (
+              <p className="rounded-[18px] border border-destructive/30 bg-destructive/10 px-3 py-2 text-sm text-destructive">
                 {error}
               </p>
-            )}
+            ) : null}
 
             <div className="flex justify-end gap-2">
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => handleOpenChange(false)}>
-                Close
+                Хаах
               </Button>
               <Button type="submit" disabled={loading || cart.length === 0}>
-                {loading ? "Saving..." : `Create Sale (${formatCents(cartTotal)})`}
+                {loading
+                  ? "Хадгалж байна..."
+                  : `Борлуулалт үүсгэх (${formatCents(cartTotal)})`}
               </Button>
             </div>
           </form>
@@ -616,23 +712,25 @@ export function SalesView({ initialSales, availableItems }: SalesViewProps) {
       <Dialog
         open={!!cancelId}
         onOpenChange={(open) => !open && setCancelId(null)}>
-        <DialogContent className="glass-dialog border-white/60">
+        <DialogContent className="glass-dialog rounded-[30px] border-white/60">
           <DialogHeader>
-            <DialogTitle>Cancel sale #{cancelId}</DialogTitle>
+            <DialogTitle className="display-title text-3xl">
+              #{cancelId} борлуулалтыг цуцлах
+            </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            This will cancel the sale and return all linked stock. This action
-            cannot be undone.
+            Энэ үйлдэл нь борлуулалтыг цуцалж, холбогдсон бүх нөөцийг буцаан
+            нэмнэ. Буцааж сэргээх боломжгүй.
           </p>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setCancelId(null)}>
-              Back
+              Буцах
             </Button>
             <Button
               variant="destructive"
               disabled={loading}
               onClick={handleCancel}>
-              {loading ? "Canceling..." : "Cancel Sale"}
+              {loading ? "Цуцалж байна..." : "Борлуулалт цуцлах"}
             </Button>
           </div>
         </DialogContent>
